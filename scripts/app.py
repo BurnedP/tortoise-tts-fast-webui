@@ -1,9 +1,11 @@
 # AGPL: a notification must be added stating that changes have been made to that file.
 
 import os
+import shutil
 from pathlib import Path
 
 import streamlit as st
+from random import randint
 
 from tortoise.api import MODELS_DIR
 from tortoise.inference import (
@@ -22,6 +24,11 @@ from app_utils.funcs import (
     load_voice_conditionings,
 )
 
+st.set_page_config(
+    page_title="Tortoise TTS WebUI",
+    layout="wide",
+    )
+
 
 LATENT_MODES = [
     "Tortoise original (bad)",
@@ -29,52 +36,60 @@ LATENT_MODES = [
     "average per voice file (broken on small files)",
 ]
 
-
 def main():
+
+    st.title('Tortoise TTS Fast WebUI')
+
+    st.divider()
+
     conf = TortoiseConfig()
-    ar_checkpoint = st_file_selector(
-        st, path=conf.AR_CHECKPOINT, label="Select GPT Checkpoint", key="pth"
-    )
-    diff_checkpoint = st_file_selector(
-        st,
-        path=conf.DIFF_CHECKPOINT,
-        label="Select Diffusion Checkpoint",
-        key="pth-diff",
-    )
+
     text = st.text_area(
         "Text",
         help="Text to speak.",
         value="The expressiveness of autoregressive transformers is literally nuts! I absolutely adore them.",
     )
-    extra_voices_dir = st.text_input(
-        "Extra Voices Directory",
-        help="Where to find extra voices for zero-shot VC",
-        value=conf.EXTRA_VOICES_DIR,
-    )
 
-    voices, extra_voices_ls = list_voices(extra_voices_dir)
+    col1, col2 = st.columns(2)
 
-    voice = st.selectbox(
-        "Voice",
-        voices,
-        help="Selects the voice to use for generation. See options in voices/ directory (and add your own!) "
-        "Use the & character to join two voices together. Use a comma to perform inference on multiple voices.",
-        index=0,
-    )
-    preset = st.selectbox(
-        "Preset",
-        (
-            "single_sample",
-            "ultra_fast",
-            "very_fast",
-            "ultra_fast_old",
-            "fast",
-            "standard",
-            "high_quality",
-        ),
-        help="Which voice preset to use.",
-        index=1,
-    )
+    with col1:
+
+        ar_checkpoint = st_file_selector(
+            st, path=conf.AR_CHECKPOINT, label="Select GPT Checkpoint", key="pth"
+        )
+        diff_checkpoint = st_file_selector(
+            st,
+            path=conf.DIFF_CHECKPOINT,
+            label="Select Diffusion Checkpoint",
+            key="pth-diff",
+        )
+    with col2:
+        voices = [v for v in os.listdir("tortoise/voices") if v != "cond_latent_example"]
+        voice = st.selectbox(
+            "Voice",
+            voices,
+            help="Selects the voice to use for generation. See options in voices/ directory (and add your own!) "
+            "Use the & character to join two voices together. Use a comma to perform inference on multiple voices.",
+            index=0,
+        )
+        preset = st.selectbox(
+            "Preset",
+            (
+                "single_sample",
+                "ultra_fast",
+                "very_fast",
+                "ultra_fast_old",
+                "fast",
+                "standard",
+                "high_quality",
+            ),
+            help="Which voice preset to use.",
+            index=1,
+        )
+
+    
+
+   
     with st.expander("Advanced"):
         col1, col2 = st.columns(2)
         with col1:
@@ -82,7 +97,7 @@ def main():
             candidates = st.number_input(
                 "Candidates",
                 help="How many output candidates to produce per-voice.",
-                value=3,
+                value=1,
             )
             latent_averaging_mode = st.radio(
                 "Latent averaging mode",
@@ -92,7 +107,8 @@ def main():
             )
             sampler = st.radio(
                 "Sampler",
-                SAMPLERS,
+                #SAMPLERS,
+                ["dpm++2m", "p", "ddim"],
                 help="Diffusion sampler. Note that dpm++2m is experimental and typically requires more steps.",
                 index=1,
             )
@@ -117,6 +133,7 @@ def main():
             output_path = st.text_input(
                 "Output Path", help="Where to store outputs.", value="results/"
             )
+
             model_dir = st.text_input(
                 "Model Directory",
                 help="Where to find pretrained model checkpoints. Tortoise automatically downloads these to .models, so this"
@@ -129,7 +146,7 @@ def main():
             high_vram = not st.checkbox(
                 "Low VRAM",
                 help="Re-enable default offloading behaviour of tortoise",
-                value=conf.LOW_VRAM,
+                value=True,
             )
             half = st.checkbox(
                 "Half-Precision",
@@ -167,6 +184,9 @@ def main():
                 help="Whether or not to produce debug_state.pth, which can aid in reproducing problems. Defaults to true.",
                 value=True,
             )
+
+    ar_checkpoint = "."
+    diff_checkpoint = "." 
     if st.button("Update Basic Settings"):
         conf.update(
             EXTRA_VOICES_DIR=extra_voices_dir,
@@ -178,6 +198,10 @@ def main():
     ar_checkpoint = None if ar_checkpoint[-4:] != ".pth" else ar_checkpoint
     diff_checkpoint = None if diff_checkpoint[-4:] != ".pth" else diff_checkpoint
     tts = load_model(model_dir, high_vram, kv_cache, ar_checkpoint, diff_checkpoint)
+
+    ar_checkpoint = None
+    diff_checkpoint = None
+    tts = load_model(MODELS_DIR, high_vram, kv_cache, ar_checkpoint, diff_checkpoint)
 
     if st.button("Start"):
         assert latent_averaging_mode
@@ -209,7 +233,7 @@ def main():
                 else:
                     voice_sel = [selected_voice]
                 voice_samples, conditioning_latents = load_voice_conditionings(
-                    voice_sel, extra_voices_ls
+                    voice_sel, []
                 )
 
                 voice_path = Path(os.path.join(output_path, selected_voice))
