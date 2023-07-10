@@ -1,6 +1,14 @@
-# this repo is now maintenance only; please develop a fork || use the mrq repo if you have large features to submit
+#BurnedP TTS WebUI
 
-### recent updates
+This is a new repo I built to improve the current state of Tortoise TTS WebUI. I like MRQ's WebUI but it used normal Trtoise, not the fast version, and Tortoise TTS Fast had a very limited WebUI without any customisation possible, so I improved it with my own twist. I also included thisserand's voice creating section, it seemed nice. I plan on updating this with new features as time goes on.
+
+## Features
+- Trtoise TTS Fast provides up to 5x improvements on speed over original Tortoise TTS. Life changing, IMO.
+- Sleek UI
+- Custom knobs for the tinkerers out there allow for precise and minute control. More control will come with future updates (hopefully).
+
+
+### Recent updates from the original repo
 
 - BigVGAN-base is now used in place of Univnet by default. (thank you to @deviandice for the example implementation)
 - `--sampler dpm++2m` is now **fixed**, and actually uses dpm++2m. see [here](https://github.com/152334H/tortoise-tts-fast/issues/2) for more discussion
@@ -13,7 +21,7 @@
 
 ---
 
-# Speeding up TorToiSe inference 5x
+# Speeding up TorToiSe inference 5x (original description)
 
 This is a working project to drastically boost the performance of TorToiSe, without modifying the base models. **Expect speedups of _5~10x_**, and hopefully 20x or larger when this project is complete.
 
