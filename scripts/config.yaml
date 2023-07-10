@@ -1,0 +1,33 @@
+paths:
+  sys:
+    models_path_default: ./models/defaults
+  user:
+    diff_models_path: ./models/diffusion_checkpoints
+    gpt_models_path: ./models/gpt_checkpoints
+    output_path: ./outputs
+user_settings:
+  tortoise:
+    ar_checkpoint: ./models/gpt_checkpoints/85_gpt.pth
+    autoreg_samples: 256
+    candidates: 1
+    conditional_free: true
+    cvvp: 0.0
+    diff_checkpoint: null
+    diff_temp: 1.0
+    half: false
+    high_vram: false
+    iterations: 600
+    kv_cache: true
+    latent_averaging_mode: Tortoise original (bad)
+    len_penalty: 1.0
+    min_chars_to_split: 200
+    preset: custom
+    produce_debug_state: true
+    rep_penalty: 2.0
+    sampler: p
+    seed: null
+    temperature: 0.8
+    top_p: 1.0
+    voice: angie
+    voice_fixer: true
+  webui: null
